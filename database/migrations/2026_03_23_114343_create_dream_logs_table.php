@@ -13,7 +13,12 @@ return new class extends Migration
     {
         Schema::create('dream_logs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->longText('dream_text');
+            $table->longText('analysis_text');
+            $table->json('images')->nullable();  // storage path list
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
