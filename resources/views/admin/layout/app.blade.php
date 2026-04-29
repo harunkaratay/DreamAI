@@ -27,7 +27,7 @@
         content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
     />
 
-    <title>DreamToon</title>
+    <title>DreamAI</title>
 
     <meta name="description" content="" />
 
@@ -83,7 +83,7 @@
               <span class="app-brand-logo demo">
                <img src="{{ asset('assets/img/img.png') }}" alt="Logo" width="60" height="50">
               </span>
-                    <hr class="fw-bold text-primary m-lg-1" >DreamToon</hr>
+                    <hr class="fw-bold text-primary m-lg-1" >DreamAI</hr>
                 </a>
 
                 <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
@@ -113,7 +113,7 @@
                 </li>
 
                 <li class="menu-item ">
-                    <a href="{{route('dreamlog.list')}}" class="menu-link text-primary">
+                    <a href="{{--route('dreamlog.list')--}}" class="menu-link text-primary">
                         <img src="{{ asset('assets/img/img_1.png') }}" class="menu-icon-img">
                         <div data-i18n="Analytics">Rüya Günlüğü</div>
                     </a>
