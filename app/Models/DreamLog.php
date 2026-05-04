@@ -12,4 +12,9 @@ class DreamLog extends Model
         'analysis_text',
         'images',
     ];
+
+    // Laravel'e images sütununun bir dizi olduğunu söylüyoruz
+    protected $casts = [
+        'images' => 'array',
+    ];
 }

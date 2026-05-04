@@ -29,4 +29,9 @@ Route::middleware([
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/ruyatabiri', [DreamController::class, 'index'])->name('dreamIndex');
+    Route::post('/ruyatabiri', [DreamController::class, 'analyze'])->name('dreamAnalyze');
+    Route::get('/dreamlog', [DreamController::class, 'dreamList'])->name('dreamlog.list');
+    Route::get('/dreamlog/{id}', [DreamController::class, 'dreamShow'])->name('dreamlog.show');
+    Route::delete('/dream-log/{id}', [DreamController::class, 'dreamLogDelete'])->name('dreamlogDelete');
+
 });

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->longText('dream_text');
             $table->longText('analysis_text');
-            $table->json('images')->nullable();  // storage path list
+            $table->json('images')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
