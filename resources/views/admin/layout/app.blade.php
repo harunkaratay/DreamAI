@@ -81,7 +81,7 @@
             <div class="app-brand demo">
                 <a href="/" class="app-brand-link">
               <span class="app-brand-logo demo">
-               <img src="{{ asset('assets/img/img.png') }}" alt="Logo" width="60" height="50">
+               <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" width="60" height="50">
               </span>
                     <hr class="fw-bold text-primary m-lg-1" >DreamAI</hr>
                 </a>
@@ -114,7 +114,7 @@
 
                 <li class="menu-item ">
                     <a href="{{route('dreamlog.list')}}" class="menu-link text-primary">
-                        <img src="{{ asset('assets/img/img_1.png') }}" class="menu-icon-img">
+                        <img src="{{ asset('assets/img/dreamlog.png') }}" class="menu-icon-img">
                         <div data-i18n="Analytics">Rüya Günlüğü</div>
                     </a>
                 </li>

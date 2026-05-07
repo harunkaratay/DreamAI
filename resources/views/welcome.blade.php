@@ -32,51 +32,54 @@
 <div class="flex items-center justify-center w-full transition-opacity opacity-100 duration-750 lg:grow starting:opacity-0">
     <main class="flex items-stretch max-w-[335px] w-full flex-col-reverse lg:max-w-4xl lg:flex-row">
 
-        <div class="text-[13px] leading-[20px] flex-1 h-full p-6 pb-12 lg:p-20 bg-white dark:bg-[#161615] dark:text-[#EDEDEC] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d] rounded-bl-lg rounded-br-lg lg:rounded-tl-lg lg:rounded-br-none">
-            <h1 class="mb-1 font-medium">DreamAI</h1>
-            <p class="mb-2 text-[#706f6c] dark:text-[#A1A09A]">Yapay Zeka Destekli Rüya Analizi Platformu.</p>
-            <ul class="flex flex-col mb-4 lg:mb-6">
+        <div class="flex-1 flex flex-col p-6 pb-12 lg:p-12 text-[13px] leading-[20px] bg-white dark:bg-[#161615] dark:text-[#EDEDEC] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d] rounded-bl-lg rounded-br-lg lg:rounded-tr-none lg:rounded-br-none lg:rounded-tl-lg lg:rounded-bl-lg">
+
+            <h1 class="mb-1 font-medium text-lg">DreamAI</h1>
+            <p class="mb-6 text-[#706f6c] dark:text-[#A1A09A]">Yapay Zeka Destekli Rüya Analizi Platformu.</p>
+
+            <ul class="flex flex-col mb-8">
                 <li class="flex items-center gap-4 py-2 relative before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A] before:top-1/2 before:bottom-0 before:left-[0.4rem] before:absolute">
-                            <span class="relative py-1 bg-white dark:bg-[#161615]">
-                                <span class="flex items-center justify-center rounded-full bg-[#FDFDFC] dark:bg-[#161615] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] w-3.5 h-3.5 border dark:border-[#3E3E3A] border-[#e3e3e0]">
-                                    <span class="rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A] w-1.5 h-1.5"></span>
-                                </span>
-                            </span>
+                <span class="relative py-1 bg-white dark:bg-[#161615]">
+                    <span class="flex items-center justify-center rounded-full bg-[#FDFDFC] dark:bg-[#161615] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] w-3.5 h-3.5 border dark:border-[#3E3E3A] border-[#e3e3e0]">
+                        <span class="rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A] w-1.5 h-1.5"></span>
+                    </span>
+                </span>
                     <span>
-                                <a href="{{-- route('dreamIndex')--}}" target="_blank" class="inline-flex items-center space-x-1 font-medium underline underline-offset-4 text-[#f53003] dark:text-[#FF4433] ml-1">
-                                    <span>Rüyalarınızı anlatın, analiz edelim ve hayalinizdeki sahneyi çizelim.</span>
-                                </a>
-                            </span>
+                    <a href="{{ route('dreamIndex') }}" class="inline-flex items-center space-x-1 font-medium underline underline-offset-4 text-[#f53003] dark:text-[#FF4433] ml-1">
+                        <span>Rüyalarınızı anlatın, analiz edelim ve hayalinizdeki sahneyi çizelim.</span>
+                    </a>
+                </span>
                 </li>
                 <li class="flex items-center gap-4 py-2 relative before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A] before:bottom-1/2 before:top-0 before:left-[0.4rem] before:absolute">
-                            <span class="relative py-1 bg-white dark:bg-[#161615]">
-                                <span class="flex items-center justify-center rounded-full bg-[#FDFDFC] dark:bg-[#161615] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] w-3.5 h-3.5 border dark:border-[#3E3E3A] border-[#e3e3e0]">
-                                    <span class="rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A] w-1.5 h-1.5"></span>
-                                </span>
-                            </span>
+                <span class="relative py-1 bg-white dark:bg-[#161615]">
+                    <span class="flex items-center justify-center rounded-full bg-[#FDFDFC] dark:bg-[#161615] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] w-3.5 h-3.5 border dark:border-[#3E3E3A] border-[#e3e3e0]">
+                        <span class="rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A] w-1.5 h-1.5"></span>
+                    </span>
+                </span>
                     <span>
-                                <a href="{{-- route('dreamlog.list')--}}" target="_blank" class="inline-flex items-center space-x-1 font-medium underline underline-offset-4 text-[#f53003] dark:text-[#FF4433] ml-1">
-                                    <span>Kendi rüya günlüğünüzü oluşturun.</span>
-                                </a>
-                            </span>
-                </li>
-            </ul>
-            <ul class="flex items-center justify-between w-full p-2 gap-4">
-                <li class="flex flex-col sm:flex-row items-center gap-4 w-full">
-                            <span class="text-gray-600 dark:text-gray-300 font-medium text-sm sm:text-base flex-1">
-                                Bilinçaltınızın gizemli dünyasını keşfetmeye ve sanata dönüştürmeye hazır mısınız? Giriş yapıp sihire kapılabilirsiniz.
-                            </span>
-                    <a href="{{route('dreamIndex') }}" target="_blank" class="inline-block dark:bg-[#eeeeec] dark:border-[#eeeeec] dark:text-[#1C1C1A] dark:hover:bg-white dark:hover:border-white hover:bg-black hover:border-black px-5 py-1.5 bg-[#1b1b18] rounded-sm border border-black text-white text-sm leading-normal">
-                        Hadi Başlayalım
+                    <a href="{{ route('dreamlog.list') }}" class="inline-flex items-center space-x-1 font-medium underline underline-offset-4 text-[#f53003] dark:text-[#FF4433] ml-1">
+                        <span>Kendi rüya günlüğünüzü oluşturun.</span>
                     </a>
+                </span>
                 </li>
             </ul>
+
+            <div class="mt-auto flex flex-col items-center gap-4 pt-4 border-t border-[#e3e3e0] dark:border-[#3E3E3A]">
+            <span class="text-[#706f6c] dark:text-[#A1A09A] font-medium text-center">
+                Bilinçaltınızın gizemli dünyasını keşfetmeye ve sanata dönüştürmeye hazır mısınız? <br>
+                Giriş yapıp sihire kapılabilirsiniz.
+            </span>
+                <a href="{{ route('dreamIndex') }}" class="inline-block px-8 py-2 bg-[#1b1b18] hover:bg-black dark:bg-[#eeeeec] dark:hover:bg-white dark:text-[#1C1C1A] text-white rounded-sm border border-black dark:border-transparent transition-colors">
+                    Hadi Başlayalım
+                </a>
+            </div>
+
         </div>
-        <div class="relative lg:-ml-px -mb-px lg:mb-0 rounded-t-lg lg:rounded-t-none lg:rounded-r-lg w-full lg:w-[438px] h-full shrink-0 overflow-hidden bg-white dark:bg-[#161615] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d] flex items-center justify-center">
-            <img src="{{ asset('assets/img/img.png') }}"
-                 alt="DreamAI Logo"
-                 class="max-w-full max-h-full object-contain">
+
+        <div class="flex-1 relative flex items-center justify-center p-8 lg:p-12 bg-white dark:bg-[#161615] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d] rounded-t-lg lg:rounded-t-none lg:rounded-r-lg lg:-ml-px -mb-px lg:mb-0 overflow-hidden">
+            <img src="{{ asset('assets/img/logo.png') }}" alt="DreamAI Logo" class="w-full h-full object-contain">
         </div>
+
     </main>
 </div>
 
