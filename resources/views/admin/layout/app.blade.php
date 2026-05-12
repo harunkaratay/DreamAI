@@ -113,7 +113,7 @@
                 </li>
 
                 <li class="menu-item ">
-                    <a href="{{route('dreamlog.list')}}" class="menu-link text-primary">
+                    <a href="{{route('dreamlogList')}}" class="menu-link text-primary">
                         <img src="{{ asset('assets/img/dreamlog.png') }}" class="menu-icon-img">
                         <div data-i18n="Analytics">Rüya Günlüğü</div>
                     </a>

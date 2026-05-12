@@ -21,7 +21,7 @@
 
             <h5 class="font-weight-bold mt-4">Görseller(yakında)</h5>
 
-            @if(count($images) > 0)
+            @if(is_array($images) && count($images) > 0)
                 <div class="row mt-3">
                     @foreach($images as $index => $path)
                         <div class="col-md-4 mb-4">
@@ -41,7 +41,7 @@
             @endif
 
             <div class="mt-4">
-                <a href="{{ route('dreamlog.list') }}" class="btn btn-secondary">
+                <a href="{{ route('dreamlogList') }}" class="btn btn-secondary">
                     ← Rüya Günlüğüne Dön
                 </a>
             </div>
