@@ -3,35 +3,35 @@
 use App\Http\Controllers\DreamController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-// Test amaçlı kalsın
-Route::get('/test1', function () {
-    return view('admin.layout.app');
-});
-
-// Sadece giriş yapmış kullanıcıların rüya işlemlerini yapmasını sağlıyoruz
-Route::middleware(['auth', 'verified'])->group(function () {
-
-    Route::get('/dashboard', function () {
+    Route::get('/', function () {
         return view('welcome');
-    })->name('dashboard');
+    });
 
-    Route::get('/profile', function () {
-        return view('profile.show');
-    })->name('profile');
+    // test 1
+    Route::get('/test1', function () {
+        return view('admin.layout.app');
+    });
 
-    // Rüya Analizi ve Görselleştirme Rotaları
-    Route::get('/ruyatabiri', [DreamController::class, 'index'])->name('dreamIndex');
-    Route::post('/ruyatabiri', [DreamController::class, 'analyze'])->name('dreamAnalyze');
+    // sadece giriş yapmış kullanıcıların rüya işlemlerini yapmasını sağlıyoruz
+    Route::middleware(['auth', 'verified'])->group(function () {
 
-    // BUTONA BASINCA ÇALIŞACAK ROTA
-    Route::post('/ruyagorsel', [DreamController::class, 'generateImage'])->name('dreamImage');
+        Route::get('/dashboard', function () {
+            return view('welcome');
+        })->name('dashboard');
 
-    // Rüya Geçmişi ve Günlüğü
-    Route::get('/dreamlog', [DreamController::class, 'dreamList'])->name('dreamlogList');
-    Route::get('/dreamlog/{id}', [DreamController::class, 'dreamShow'])->name('dreamlogShow');
-    Route::delete('/dreamlog/{id}', [DreamController::class, 'dreamLogDelete'])->name('dreamlogDelete');
-});
+        Route::get('/profile', function () {
+            return view('profile.show');
+        })->name('profile');
+
+        // rüya analizi
+        Route::get('/ruyatabiri', [DreamController::class, 'index'])->name('dreamIndex');
+        Route::post('/ruyatabiri', [DreamController::class, 'analyze'])->name('dreamAnalyze');
+
+        // görsel üretimi formu için post
+        Route::post('/ruyagorsel', [DreamController::class, 'generateImage'])->name('dreamImage');
+
+        // rüya günlüğü
+        Route::get('/dreamlog', [DreamController::class, 'dreamList'])->name('dreamlogList');
+        Route::get('/dreamlog/{id}', [DreamController::class, 'dreamShow'])->name('dreamlogShow');
+        Route::delete('/dreamlog/{id}', [DreamController::class, 'dreamLogDelete'])->name('dreamlogDelete');
+    });

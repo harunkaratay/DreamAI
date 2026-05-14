@@ -3,58 +3,64 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class DreamApiService
 {
     public function analyzeDream($dreamText)
     {
-        $llmUrl = config('services.ollama.url', 'http://127.0.0.1:11434/api/chat');
+        $apiKey = env('GEMINI_API_KEY');
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $apiKey;
 
-        // Eski projendeki o meşhur profesyonel prompt
-        $systemPrompt =
-            'Sen bilge, mistik ve derin görüşlü bir rüya rehberisin.
+        $prompt = "Sen uzman bir rüya tabircisi ve görsel sanatçısın. Aşağıdaki rüyayı derinlemesine, edebi ve psikolojik bir dille analiz et.
+        Analizinin sonuna, rüyadaki en vurucu sahneleri yapay zekanın çizebilmesi için İngilizce promptlar ekle.
 
-                --- GÖREV 1: GİZLİ TEKNİK VERİ (KULLANICI KESİNLİKLE GÖRMEYECEK) ---
-                Önce, rüyayı gören kişinin fiziksel görünümünü (Cinsiyet, saç, yaş, kıyafet) İngilizce olarak analiz et.
-                Bunu çıktının EN BAŞINA şu formatta yaz ve kapat:
-                [SUBJECT] (örneğin: a young man with messy black hair, wearing grey t-shirt) [/SUBJECT]
+        Yanıtını KESİNLİKLE şu formatta ver:
 
-                (Bu alan bittikten sonra bir alt satıra geç ve analize başla. UNUTMA BU ALANI ASLA KULLANICI GÖRMEMELİ)
+        (Buraya Türkçe rüya analizini yaz)
 
-                --- GÖREV 2: SOHBET TARZI RÜYA YORUMU (TÜRKÇE) ---
-                Kullanıcıyla birebir, samimi ve derin bir sohbet başlat.
-                - ASLA "Rüya sahibi" veya "Kişi" deme. Doğrudan "SEN" diye hitap et.
-                - Örnek: "Bu rüyanda gördüğün kurt, senin bastırdığın öfkeni temsil ediyor..."
-                - Sanki bir terapist koltuğunda karşılıklı oturuyorsunuz.
-                - Metin akıcı, gizemli ve sürükleyici olsun.
-                - Metnin sonuna, geleceğe dair "Senin için 2 Kehanetim var:" diyerek 2 net öngörü ekle.
+        [SUBJECT] (Karakter tasviri İngilizce) [/SUBJECT]
 
-                --- GÖREV 3: SİNEMATİK GÖRSEL KOMUTLAR (İNGİLİZCE) ---
-                Yorum bittikten sonra ALT SATIRA GEÇ ve tam olarak şunu yaz: |||SCENE_START|||
-                Ardından rüyayı anlatan 4 karelik İngilizce prompt oluştur.
+        |||SCENE_START|||
+        [SCENE] (1. sahne detaylı İngilizce prompt) [/SCENE]
+        [SCENE] (2. sahne detaylı İngilizce prompt) [/SCENE]
+        [SCENE] (3. sahne detaylı İngilizce prompt) [/SCENE]
+        |||SCENE_END|||
 
-                KURALLAR:
-                - Karakter için asla "I" veya "me" deme. Sadece yukarıda belirlediğin [SUBJECT] etiketini kullan.
-                - [SCENE] ... [/SCENE] blokları kullan.
+        Rüya: " . $dreamText;
 
-                ÇIKTI ŞABLONU:
-                [SUBJECT] ... [/SUBJECT]
-                (Buraya Türkçe sohbet tarzı yorum gelecek...)
-                |||SCENE_START|||
-                [SCENE] ... [/SCENE]
-                [SCENE] ... [/SCENE]
-                ...';
+        try {
+            $response = Http::withoutVerifying()
+                ->withOptions([
+                    'curl' => [
+                        CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4, // DNS çözümleme hatasını (IPv6) devre dışı bırakır
+                        CURLOPT_CONNECTTIMEOUT => 10,           // Bağlantı kurma süresi
+                    ]
+                ])
+                ->timeout(60)
+                ->withHeaders([
+                    'Content-Type' => 'application/json'
+                ])
+                ->post($url, [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $prompt]
+                            ]
+                        ]
+                    ]
+                ]);
 
+            if ($response->successful()) {
+                return $response->json()['candidates'][0]['content']['parts'][0]['text'];
+            }
 
-        $response = Http::timeout(180)->post($llmUrl, [
-            'model' => config('services.ollama.model', 'qwen2.5:14b'),
-            'messages' => [
-                ['role' => 'system', 'content' => $systemPrompt],
-                ['role' => 'user', 'content' => $dreamText]
-            ],
-            'stream' => false
-        ]);
+            Log::error('Gemini API Hatası: ' . $response->body());
+            throw new \Exception("Google API Yanıt Vermedi: " . $response->status());
 
-        return $response->json()['message']['content'] ?? null;
+        } catch (\Exception $e) {
+            Log::error('DreamApiService Hatası: ' . $e->getMessage());
+            throw $e;
+        }
     }
 }

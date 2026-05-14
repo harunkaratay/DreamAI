@@ -12,11 +12,13 @@ use Illuminate\Support\Str;
 
 class DreamController extends Controller
 {
+    // analiz sayfasını dönderen fonksiyon
     public function index()
     {
         return view('admin.dream.analyze');
     }
 
+    // analiz yapılması için api servisini çağısan fonskiyon
     public function analyze(Request $request, DreamApiService $apiService)
     {
         set_time_limit(180);
@@ -24,37 +26,18 @@ class DreamController extends Controller
         $dreamText = $request->input('dream');
 
         try {
-            // 1. Qwen'den analizi al
+            // buluttan gemini apisinden metni al
             $fullContent = $apiService->analyzeDream($dreamText);
 
             $subjectDesc = "";
 
-            // === GELİŞMİŞ GİZLEME VE YAKALAMA ALGORİTMASI ===
-
-            // Durum 1: Normal [SUBJECT]...[/SUBJECT] formatını yakala
+            // görsel için promptları ayıklama
             if (preg_match('/\[SUBJECT\](.*?)\[\/SUBJECT\]/is', $fullContent, $matches)) {
                 $subjectDesc = trim($matches[1]);
                 $fullContent = str_replace($matches[0], '', $fullContent);
             }
-            // Durum 2: Yapay Zeka başlık koymayı unutup sadece [/SUBJECT] ile bitirmişse
-            elseif (preg_match('/^(.*?)\[\/SUBJECT\]/is', $fullContent, $matches)) {
-                $subjectDesc = trim($matches[1]);
-                $fullContent = str_replace($matches[0], '', $fullContent);
-            }
 
-            // Arka planda çizim için gidecek metnin içindeki gereksiz köşeli parantezleri temizle
-            $subjectDesc = trim(str_replace(['[', ']'], '', $subjectDesc));
-
-            // ZORUNLU TEMİZLİK: Ne olursa olsun, metnin içinde kalma ihtimali olan etiketleri yok et
-            $fullContent = preg_replace('/\[SUBJECT\]|\[\/SUBJECT\]/i', '', $fullContent);
-
-            // 🔥 EKSTRA GÜVENLİK: En başta kalan [a young man...] gibi köşeli parantezli metinleri temizle
-            $fullContent = preg_replace('/^\[.*?\]\s*/s', '', trim($fullContent));
-
-            // Son temizlik
-            $fullContent = trim($fullContent);
-
-            $analysisText = $fullContent;
+            $analysisText = trim($fullContent);
             $prompts = [];
 
             if (str_contains($fullContent, '|||SCENE_START|||')) {
@@ -71,23 +54,25 @@ class DreamController extends Controller
                 }
             }
 
-            // 2. Veritabanına SADECE METNİ kaydet (Henüz resim yok)
+            // veri tabanına sadece analiz metninin kaydı
             $log = DreamLog::create([
                 'user_id' => Auth::id(),
                 'dream_text' => $dreamText,
                 'analysis_text' => $analysisText,
-                'images' => null // Resim sütunu şimdilik boş
+                'images' => null
             ]);
 
-            // 3. Sayfaya log_id ve promptları gönder (Resim üretme butonu için lazım olacak)
+            // analizin hangi rüyaya ait olduğunun bilgilerinin verilmesi
             return view('admin.dream.analyze', [
                 'analysis' => $analysisText,
                 'original_dream' => $dreamText,
                 'prompts' => $prompts,
-                'log_id' => $log->id // GÜNCELLEME İÇİN KRİTİK
+                'log_id' => $log->id
             ]);
 
+            //hatanın yakalanması
         } catch (\Exception $e) {
+
             return back()->with('error', 'Sistem Hatası: ' . $e->getMessage());
         }
     }
@@ -95,92 +80,106 @@ class DreamController extends Controller
 
     public function generateImage(Request $request)
     {
+        // işlemcinin görseli üretmesi için gerekli sürenin belirlenmesi
         set_time_limit(300);
-
         $logId = $request->input('log_id');
         $prompts = $request->input('prompts');
-
-        if (!is_array($prompts)) {
-            $prompts = json_decode($prompts, true);
-        }
-
-        if (!$prompts || empty($prompts)) {
-            return back()->with('error', 'Görsel tasviri bulunamadı.');
-        }
-
-        $apiBaseUrl = env('WINDOWS_SD_API_BASE_URL');
         $generatedImages = [];
 
-        $masterStyle = "(masterpiece, best quality, ultra-detailed:1.2), cinematic lighting, 8k uhd, ";
-        $masterNegative = "(deformed, distorted, disfigured:1.3), bad anatomy, blurry, watermark, text";
+        if (!is_array($prompts)) { $prompts = json_decode($prompts, true); }
+
+        // ComfyUI JSON Şablonunun okunması
+        $path = storage_path('app/comfy_workflow.json');
+
+        $workflowJson = file_get_contents($path);
 
         foreach ($prompts as $key => $singlePrompt) {
             try {
-                $response = Http::timeout(300)
-                    ->withHeaders([
-                        'Content-Type' => 'application/json',
-                        'Accept' => 'application/json',
-                    ])
-                    ->post($apiBaseUrl . '/sdapi/v1/txt2img', [
-                        'prompt' => $masterStyle . $singlePrompt,
-                        'negative_prompt' => $masterNegative,
-                        'steps' => 6,
-                        'cfg_scale' => 2.0,
-                        'width' => 1024,
-                        'height' => 1024,
-                        'sampler_name' => "DPM++ SDE", // Cloudflare için daha stabil
-                    ]);
+                $workflow = json_decode($workflowJson, true);
+
+                // görsel promptunun analizi gerkli noda aktarımı
+                $cleanPrompt = trim(preg_replace('/[^a-zA-Z0-9\s,]/', '', $singlePrompt));
+                $workflow['2']['inputs']['text'] = $cleanPrompt . ", cinematic lighting, ultra-detailed, photorealistic, 8k";
+
+                // ComfyUI u çizimi başlatma
+                $response = Http::post('http://127.0.0.1:8188/prompt', [
+                    'prompt' => $workflow
+                ]);
 
                 if ($response->successful()) {
-                    $json = $response->json();
-                    $base64 = $json['images'][0] ?? null;
+                    $promptId = $response->json()['prompt_id'];
+                    $isDone = false;
+                    $fileNameFromComfy = '';
 
-                    if ($base64) {
-                        $imageContent = base64_decode($base64);
-                        $fileName = 'dreams/' . uniqid('dream_') . '_' . $key . '.png';
-                        Storage::disk('public')->put($fileName, $imageContent);
-                        $generatedImages[] = 'storage/' . $fileName;
+                    // resmin üretilmesini bekle her 2 saniyede bir kontrol et
+                    for ($i = 0; $i < 20; $i++) {
+                        sleep(2); // ComfyUI'ı yormamak için 2 saniye bekle
+
+                        $historyRes = Http::get("http://127.0.0.1:8188/history/{$promptId}");
+                        $historyData = $historyRes->json();
+
+                        // eğer resim geçmişe düştüyse çizim bitmiştir
+                        if (!empty($historyData[$promptId])) {
+                            $outputs = $historyData[$promptId]['outputs'];
+
+                            // hangi node ID sinde resmi kaydettiyse bulup dosya adını alıyoruz
+                            foreach ($outputs as $nodeId => $nodeOutput) {
+                                if (isset($nodeOutput['images'][0]['filename'])) {
+                                    $fileNameFromComfy = $nodeOutput['images'][0]['filename'];
+                                    break 2; // Döngüleri kır ve çık
+                                }
+                            }
+                        }
                     }
+
+                    // resmi ComfyUIdan alıp laravelin içine public/storage kaydet
+                    if ($fileNameFromComfy) {
+                        $imageBinary = Http::get("http://127.0.0.1:8188/view?filename={$fileNameFromComfy}")->body();
+
+                        if (!Storage::disk('public')->exists('dreams')) {
+                            Storage::disk('public')->makeDirectory('dreams');
+                        }
+
+                        // karışmamsı için benzersiz bir isimle kaydet
+                        $saveName = 'dreams/dream_' . uniqid() . '_' . $key . '.png';
+                        Storage::disk('public')->put($saveName, $imageBinary);
+
+                        $generatedImages[] = 'storage/' . $saveName;
+                    }
+                } else {
+                    \Log::error("ComfyUI API'ye ulaşılamadı. Port 8188 açık mı?");
                 }
             } catch (\Exception $e) {
-                \Log::error('Görsel Üretim Hatası: ' . $e->getMessage());
+                \Log::error('ComfyUI Çizim Hatası: ' . $e->getMessage());
                 continue;
             }
         }
 
-        // 🔥 KRİTİK DÜZELTME: Veritabanına kaydet ve AYNI sayfaya her şeyle dön
+        // çizilen resimleri veritabanına kaydet ve sayfaya gönder
         $log = DreamLog::find($logId);
 
         if ($log) {
             $log->images = $generatedImages;
             $log->save();
 
-            // Resimler oluştuktan sonra seni image.blade'e değil,
-            // Analiz sonucunun olduğu asıl sayfaya, resimlerle beraber gönderiyoruz.
-            return view('admin.dream.analyze', [
-                'analysis' => $log->analysis_text,
-                'original_dream' => $log->dream_text,
-                'images' => $generatedImages, // Artık bu değişken Blade'de kullanılabilir
-                'prompts' => [], // Butonun tekrar çıkmaması için boşaltıyoruz
+            return view('admin.dream.image', [
+                'images' => $generatedImages,
                 'log_id' => $log->id
             ]);
         }
 
-        return back()->with('error', 'Kayıt bulunamadı.');
+        return "Hata: Kayıt bulunamadı.";
     }
 
     // dream log kodları
-
     public function dreamList()
     {
-        // kullanıcının rüyalarını en yeniden eskiye doğru sıralar
         $logs = DreamLog::where('user_id', Auth::id())->latest()->paginate(12);
         return view('admin.dreamlog.list', compact('logs'));
     }
 
     public function dreamShow($id)
     {
-        // sadece o anki kullanıcıya ait olan rüyayı getirir
         $log = DreamLog::where('user_id', Auth::id())->findOrFail($id);
         $images = $log->images ?? [];
         return view('admin.dreamlog.show', compact('log', 'images'));
@@ -190,7 +189,6 @@ class DreamController extends Controller
     {
         $log = DreamLog::where('user_id', Auth::id())->findOrFail($id);
 
-        // eğer rüyaya ait görseller varsa onları da siliyoruz
         if ($log->images) {
             $images = is_array($log->images) ? $log->images : json_decode($log->images, true);
             if (is_array($images)) {
@@ -203,9 +201,7 @@ class DreamController extends Controller
             }
         }
 
-        // veritabanından kaydı sil
         $log->delete();
-
         return redirect()->route('dreamlogList')->with('success', 'Rüya başarıyla silindi.');
     }
 }

@@ -58,15 +58,13 @@
                                 <form action="{{ route('dreamImage') }}" method="POST" id="imageGenForm">
                                     @csrf
                                     <input type="hidden" name="log_id" value="{{ $log_id }}">
+                                    <input type="hidden" name="prompts" value="{{ json_encode($prompts) }}">
 
-                                    @foreach($prompts as $prompt)
-                                        <input type="hidden" name="prompts[]" value="{{ $prompt }}">
-                                    @endforeach
-
-                                    <button type="submit" class="btn btn-primary btn-block py-2">
+                                    <button type="submit" class="btn btn-primary">
                                         Sahne Görsellerini Oluştur
                                     </button>
                                 </form>
+
                                 @if(isset($images) && count($images) > 0)
                                     <div class="mt-4">
                                         <h6 class="font-weight-bold text-primary mb-3">Rüya Sahneleri</h6>
@@ -168,7 +166,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-        // Markdown Render (Sonuç ekranı için)
         document.addEventListener('DOMContentLoaded', function() {
             const rawData = document.getElementById('rawAnalysisData');
             const resultArea = document.getElementById('markdownResult');
@@ -177,20 +174,15 @@
             }
         });
 
-
-        // loading görünümü
-
         document.addEventListener('DOMContentLoaded', function() {
             const analyzeForm = document.getElementById('analyzeForm');
             const imageForm = document.getElementById('imageGenForm');
             const loader = document.getElementById('dream-loader');
 
-            // UI elementleri
             const titleEl = document.getElementById('loader-title');
             const subtitleEl = document.getElementById('loader-subtitle');
             const progressBar = document.getElementById('progress-bar');
 
-            // ikon
             const icons = {
                 analyze: document.getElementById('icon-analyze'),
                 symbol: document.getElementById('icon-symbol'),
@@ -198,27 +190,25 @@
                 finish: document.getElementById('icon-finish'),
             };
 
-            // metinler
             const analysisScenarios = [
                 { icon: 'icon-analyze', title: "Rüya Sunuculara İletiliyor...", sub: "Bağlantı kuruluyor" },
                 { icon: 'icon-analyze', title: "Yapay Zeka Metni Okuyor...", sub: "İçerik işleniyor" },
                 { icon: 'icon-symbol',  title: "Bağlam Çözümleniyor...", sub: "Zaman ve mekan algısı taranıyor" },
                 { icon: 'icon-symbol',  title: "Gizli Semboller Aranıyor...", sub: "Bilinçaltı simgeleri ayrıştırılıyor" },
-                { icon: 'icon-symbol',  title: "Psikolojik Arketipler...", sub: "Arketip eşleşmeleri yapılıyor" },
                 { icon: 'icon-symbol',  title: "Duygu Analizi Yapılıyor...", sub: "Baskın hisler tespit ediliyor" },
                 { icon: 'icon-paint',   title: "Anlam Örüntüleri...", sub: "Parçalar birleştiriliyor" },
                 { icon: 'icon-finish',  title: "Rapor Hazırlanıyor...", sub: "Sonuç oluşturuluyor" }
             ];
 
             const imageScenarios = [
+
                 { icon: 'icon-analyze', title: "Sahne Yapısı Kuruluyor...", sub: "Görsel planlama yapılıyor" },
-                { icon: 'icon-paint',   title: "Kompozisyon Hazırlanıyor...", sub: "Ana sahne çiziliyor" },
-                { icon: 'icon-paint',   title: "Renk ve Işık...", sub: "Atmosfer ayarlanıyor" },
-                { icon: 'icon-paint',   title: "Detay İşleme...", sub: "Netlik ve doku artırılıyor" },
-                { icon: 'icon-finish',  title: "Son Dokunuşlar...", sub: "Görsel tamamlanıyor" }
+                { icon: 'icon-paint', title: "Kompozisyon Hazırlanıyor...", sub: "Ana sahne çiziliyor" },
+                { icon: 'icon-paint', title: "Renk ve Işık...", sub: "Atmosfer ayarlanıyor" },
+                { icon: 'icon-paint', title: "Detay İşleme...", sub: "Netlik ve doku artırılıyor" },
+                { icon: 'icon-finish', title: "Son Dokunuşlar...", sub: "Görsel tamamlanıyor" }
             ];
 
-            // ikon değiştirme
             function showIconById(iconId) {
                 Object.values(icons).forEach(icon => {
                     if (icon) icon.classList.remove('active');
@@ -227,7 +217,6 @@
                 if (el) el.classList.add('active');
             }
 
-            // metin ve progress değiştirme
             function updateUI(step, progressPercent) {
                 titleEl.style.opacity = '0';
                 subtitleEl.style.opacity = '0';
@@ -246,26 +235,21 @@
                 }, 300);
             }
 
-
             async function handleSmartSubmit(e, scenarios) {
-                e.preventDefault(); // Sayfanın aniden yenilenmesini engelle!
+                e.preventDefault();
                 const form = e.target;
 
-                // loaderı başlat
                 loader.style.display = 'flex';
                 let currentStepIndex = 0;
-                let progress = 5; // %5'ten başlat
+                let progress = 5;
 
-                // ilk adımı göster
                 updateUI(scenarios[0], progress);
 
-                // YAVAŞ İLERLEME MODU (Zamanlayıcı)
+                // ComfyUI (Tekli resim) ortalama 8-10 saniye sürdüğü için progress bar o hıza uygun dolacak
                 const timer = setInterval(() => {
-                    // İlerleme mantığı: %90'a kadar yavaşça git, orada bekle
                     if (progress < 90) {
-                        progress += Math.random() * 5; // Rastgele küçük artışlar
+                        progress += Math.random() * 8;
 
-                        // Senaryo metinlerini ilerlemeye göre değiştir
                         const stepIndex = Math.floor((progress / 90) * scenarios.length);
                         if (stepIndex !== currentStepIndex && scenarios[stepIndex]) {
                             currentStepIndex = stepIndex;
@@ -277,27 +261,21 @@
                 }, 800);
 
                 try {
-                    // ARKA PLANDA VERİYİ GÖNDER (AJAX)
                     const formData = new FormData(form);
                     const response = await fetch(form.action, {
                         method: 'POST',
                         body: formData
                     });
 
-                    // 1. Zamanlayıcıyı durdur
                     clearInterval(timer);
 
-                    // 2. HIZLI BİTİŞ MODU: Çubuğu 1 saniyede %100 yap (BURASI DEĞİŞTİ)
-                    progressBar.style.transition = 'width 1s ease-out'; // <--- SÜRE 1 SANİYE OLDU
+                    progressBar.style.transition = 'width 1s ease-out';
                     progressBar.style.width = '100%';
 
-                    // Son mesajı göster
-                    updateUI({ icon: 'icon-finish', title: "İşlem Tamamlandı!", sub: "Sonuçlar Yükleniyor..." }, 100);
+                    updateUI({ icon: 'icon-finish', title: "Rüyanız Hazır!", sub: "Sahne yükleniyor..." }, 100);
 
-                    // 3. Kullanıcının %100 olduğunu görmesi için 1 saniye bekle (BURASI DEĞİŞTİ)
-                    await new Promise(resolve => setTimeout(resolve, 1000)); // <--- BEKLEME SÜRESİ 1000ms (1sn)
+                    await new Promise(resolve => setTimeout(resolve, 1000));
 
-                    // 4. Yeni Sayfayı Bas
                     const htmlResult = await response.text();
                     document.open();
                     document.write(htmlResult);
@@ -306,12 +284,11 @@
                 } catch (error) {
                     console.error('Hata:', error);
                     clearInterval(timer);
-                    alert("Bir hata oluştu. Lütfen sayfayı yenileyip tekrar deneyin.");
-                    loader.style.display = 'none'; // Loader'ı kapat
+                    alert("Çizim sırasında bir hata oluştu veya sunucu yanıt vermedi.");
+                    loader.style.display = 'none';
                 }
             }
 
-            // Event Listeners
             if(analyzeForm) {
                 analyzeForm.addEventListener('submit', (e) => handleSmartSubmit(e, analysisScenarios));
             }
